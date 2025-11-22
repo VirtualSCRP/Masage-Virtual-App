@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Message Virtual</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #8a2be2;
+            --primary-dark: #6a1cb0;
+            --primary-light: #9d4edd;
+            --secondary: #da70d6;
+            --background: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface-light: #2d2d2d;
+            --text: #ffffff;
+            --text-secondary: #b0b0b0;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --error: #ff4444;
+            --gold: #ffd700;
+            --neon-purple: #c724ff;
+            --neon-pink: #ff2a6d;
+            --verified: #0099ff;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0033 50%, #0a0a0a 100%);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 0;
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Хедер */
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(15, 15, 15, 0.95);
+            border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        .rocket {
+            animation: rocketFly 3s ease-in-out infinite;
+        }
+
+        @keyframes rocketFly {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-8px) rotate(-5deg); }
+            50% { transform: translateY(-12px) rotate(0deg); }
+            75% { transform: translateY(-8px) rotate(5deg); }
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, var(--neon-purple), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* Контент */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        /* Карточки */
+        .card {
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.8), rgba(45, 0, 54, 0.6));
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Кнопки */
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 15px;
+            padding: 16px 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), #ffaa00);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-icon {
+            margin-right: 10px;
+        }
+
+        /* Навигация */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 15, 15, 0.95);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid rgba(138, 43, 226, 0.3);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            text-align: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .nav-item.active {
+            background: rgba(138, 43, 226, 0.2);
+        }
+
+        .nav-item.active .nav-icon {
+            color: var(--secondary);
+        }
+
+        .nav-item.active .nav-text {
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+            color: var(--text-secondary);
+        }
+
+        .nav-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Экраны */
+        .screen {
+            display: none;
+        }
+
+        /* Чат */
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(26, 26, 26, 0.5);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+
+        .no-messages {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            margin-left: auto;
+        }
+
+        .admin-message {
+            background: var(--surface-light);
+            margin-right: auto;
+            border: 1px solid rgba(138, 43, 226, 0.1);
+        }
+
+        .message-sender {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        .message-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: var(--surface);
+            color: var(--text);
+            border-radius: 20px;
+            font-size: 16px;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Профиль */
+        .profile-stats {
+            background: var(--surface);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .verified-text {
+            color: var(--verified);
+        }
+
+        /* Ответы */
+        .replies-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .reply-item {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+
+        .reply-question {
+            color: var(--text);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .reply-answer {
+            color: var(--success);
+            background: rgba(0, 255, 136, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid var(--success);
+        }
+
+        .no-replies {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Главный экран -->
+        <div class="main-screen screen" id="mainScreen">
+            <div class="header">
+                <div class="logo">
+                    <div class="rocket">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                </div>
+                <h1>Message Virtual</h1>
+                <div class="header-subtitle">сообщение для меня это лучший подарок от тебя❤</div>
+            </div>
+            
+            <div class="content">
+                <div class="card">
+                    <div style="text-align: center; font-size: 18px; font-weight: 600;">
+                        Напиши уже сейчас <span style="color: var(--neon-purple);">сообщение</span> мне! 💫
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button class="btn" onclick="showScreen('chatScreen')">
+                        <i class="fas fa-edit btn-icon"></i>
+                        🚀 Написать сообщение
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="showScreen('profileScreen')">
+                        <i class="fas fa-user btn-icon"></i>
+                        Мой профиль
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Экран чата -->
+        <div class="chat-screen screen" id="chatScreen">
+            <div class="header">
+                <div class="logo" style="width: 60px; height: 60px;">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h1>Чат с Virtual</h1>
+                <div class="header-subtitle">Пиши свои мысли, я отвечу! 💜</div>
+            </div>
+            
+            <div class="content">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="no-messages" id="noMessages">
+                        💬 У вас ещё нет сообщений с Virtual<br>
+                        <small>Напишите первое сообщение и ждите ответа!</small>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <input type="text" class="chat-input" id="messageInput" placeholder="Введите сообщение...">
+                    <button class="send-btn" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Экран профиля -->
+        <div class="screen" id="profileScreen">
+            <div class="header">
+                <div class="logo" style="width: 60px; height: 60px;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h1>Мой Профиль</h1>
+                <div class="header-subtitle">Твоя статистика</div>
+            </div>
+            
+            <div class="content">
+                <div class="card">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div style="font-size: 20px; font-weight: 700;" id="profileName">Загрузка...</div>
+                        <div style="color: var(--text-secondary);" id="profileUsername">@username</div>
+                    </div>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">👤 Имя:</span>
+                        <span class="stat-value" id="statName">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">🔗 Юзер:</span>
+                        <span class="stat-value" id="statUsername">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">🎖️ Ранг:</span>
+                        <span class="stat-value" id="statRank">Пользователь</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">📨 Сообщений:</span>
+                        <span class="stat-value" id="statMessages">0</span>
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button class="btn" onclick="loadReplies()">
+                        <i class="fas fa-envelope btn-icon"></i>
+                        📩 Посмотреть ответы
+                    </button>
+                    
+                    <button class="btn btn-gold" id="adminPanelBtn" style="display: none;" onclick="tg.showAlert('👑 Админ панель доступна в боте через команду /profile')">
+                        <i class="fas fa-crown btn-icon"></i>
+                        👑 Админ Панель
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Экран ответов -->
+        <div class="screen" id="repliesScreen">
+            <div class="header">
+                <div class="logo" style="width: 60px; height: 60px;">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <h1>Мои Ответы</h1>
+                <div class="header-subtitle">Ответы от Virtual</div>
+            </div>
+            
+            <div class="content">
+                <div class="replies-list" id="repliesList">
+                    <div class="loading" id="repliesLoading">
+                        <i class="fas fa-spinner fa-spin"></i><br>
+                        Загружаем ответы...
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button class="btn btn-secondary" onclick="showScreen('profileScreen')">
+                        <i class="fas fa-arrow-left btn-icon"></i>
+                        Назад
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Навигация -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="showScreen('mainScreen')">
+            <div class="nav-icon"><i class="fas fa-home"></i></div>
+            <div class="nav-text">Главная</div>
+        </div>
+        <div class="nav-item" onclick="showScreen('chatScreen')">
+            <div class="nav-icon"><i class="fas fa-comments"></i></div>
+            <div class="nav-text">Чат</div>
+        </div>
+        <div class="nav-item" onclick="showScreen('profileScreen')">
+            <div class="nav-icon"><i class="fas fa-user"></i></div>
+            <div class="nav-text">Профиль</div>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        let user = tg.initDataUnsafe.user;
+        
+        // Инициализация WebApp
+        tg.expand();
+        tg.enableClosingConfirmation();
+        tg.BackButton.hide();
+
+        const ADMIN_IDS = [6831285989];
+        
+        // Данные пользователя
+        let userData = {
+            messageCount: parseInt(localStorage.getItem('messageCount')) || 0,
+            chatMessages: JSON.parse(localStorage.getItem('chatMessages')) || [],
+            replies: JSON.parse(localStorage.getItem('replies')) || []
+        };
+
+        function isAdmin(userId) {
+            return ADMIN_IDS.includes(Number(userId));
+        }
+
+        function saveUserData() {
+            localStorage.setItem('messageCount', userData.messageCount);
+            localStorage.setItem('chatMessages', JSON.stringify(userData.chatMessages));
+            localStorage.setItem('replies', JSON.stringify(userData.replies));
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.style.display = 'none';
+            });
+            document.getElementById(screenId).style.display = 'block';
+            updateNav(screenId);
+            
+            if (screenId === 'profileScreen') {
+                loadProfileData();
+            } else if (screenId === 'chatScreen') {
+                loadChatData();
+                setTimeout(() => {
+                    const input = document.getElementById('messageInput');
+                    input.focus();
+                    // Предотвращаем zoom на iOS
+                    input.style.fontSize = '16px';
+                }, 100);
+            }
+        }
+
+        function updateNav(screenId) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const navs = document.querySelectorAll('.nav-item');
+            if (screenId === 'mainScreen') navs[0].classList.add('active');
+            else if (screenId === 'chatScreen') navs[1].classList.add('active');
+            else if (screenId === 'profileScreen') navs[2].classList.add('active');
+        }
+
+        function loadProfileData() {
+            if (user) {
+                document.getElementById('profileName').textContent = user.first_name || 'Пользователь';
+                document.getElementById('profileUsername').textContent = user.username ? '@' + user.username : 'Не указан';
+                document.getElementById('statName').textContent = user.first_name || 'Не указано';
+                document.getElementById('statUsername').textContent = user.username ? '@' + user.username : 'Не указан';
+            }
+            
+            document.getElementById('statMessages').textContent = userData.messageCount;
+            
+            if (user && isAdmin(user.id)) {
+                document.getElementById('statRank').textContent = 'Virtual 👑';
+                document.getElementById('statRank').className = 'stat-value verified-text';
+                document.getElementById('adminPanelBtn').style.display = 'block';
+            }
+        }
+
+        function loadChatData() {
+            const chat = document.getElementById('chatMessages');
+            const noMsg = document.getElementById('noMessages');
+            
+            if (userData.chatMessages.length === 0) {
+                noMsg.style.display = 'block';
+                chat.innerHTML = '<div class="no-messages">💬 У вас ещё нет сообщений с Virtual<br><small>Напишите первое сообщение и ждите ответа!</small></div>';
+            } else {
+                noMsg.style.display = 'none';
+                let html = '';
+                userData.chatMessages.forEach(msg => {
+                    const senderName = msg.sender === 'admin' ? 'Virtual' : (user?.first_name || 'Вы');
+                    html += `<div class="message ${msg.sender}-message">
+                        <div class="message-sender">${senderName}</div>
+                        ${msg.text}
+                        <div class="message-time">${msg.time}</div>
+                    </div>`;
+                });
+                chat.innerHTML = html;
+                chat.scrollTop = chat.scrollHeight;
+            }
+        }
+
+        function loadReplies() {
+            showScreen('repliesScreen');
+            const list = document.getElementById('repliesList');
+            
+            list.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><br>Загружаем ответы...</div>';
+            
+            // Имитация загрузки ответов
+            setTimeout(() => {
+                if (userData.replies.length === 0) {
+                    list.innerHTML = '<div class="no-replies">📭 У вас пока нет ответов<br><small>Когда Virtual ответит, они появятся здесь</small></div>';
+                } else {
+                    let html = '';
+                    userData.replies.forEach((reply, index) => {
+                        html += `<div class="reply-item">
+                            <div class="reply-question">${reply.question || `Вопрос ${index + 1}`}</div>
+                            <div class="reply-answer">${reply.answer}</div>
+                        </div>`;
+                    });
+                    list.innerHTML = html;
+                }
+            }, 1000);
+        }
+
+        // 🔧 ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ СООБЩЕНИЯ
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Скрываем сообщение "нет сообщений"
+            document.getElementById('noMessages').style.display = 'none';
+            
+            // Добавляем сообщение в локальный чат
+            const time = new Date().toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', minute: '2-digit' 
+            });
+            
+            userData.chatMessages.push({
+                text: message,
+                sender: 'user',
+                time: time
+            });
+            
+            userData.messageCount++;
+            saveUserData();
+            
+            // Обновляем счетчик в профиле
+            document.getElementById('statMessages').textContent = userData.messageCount;
+            
+            // 🔧 ОТПРАВКА СООБЩЕНИЯ БОТУ ЧЕРЕЗ TELEGRAM BOT API
+            sendMessageToBot(message);
+            
+            // Обновляем чат
+            loadChatData();
+            input.value = '';
+            
+            // Авто-ответ от Virtual (временный, пока бот не ответит)
+            setTimeout(() => {
+                const replies = [
+                    "Привет! Сообщение получено! Я свяжусь с тобой очень скоро 🚀",
+                    "Спасибо за сообщение! Обрабатываю информацию... 🤔",
+                    "Получил твой сигнал! Скоро будет ответ! 💫",
+                    "Сообщение доставлено! Начинаю процесс ответа... ⚡"
+                ];
+                const randomReply = replies[Math.floor(Math.random() * replies.length)];
+                
+                const replyTime = new Date().toLocaleTimeString('ru-RU', { 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+                
+                userData.chatMessages.push({
+                    text: randomReply,
+                    sender: 'admin',
+                    time: replyTime
+                });
+                
+                saveUserData();
+                loadChatData();
+            }, 1500);
+        }
+
+        // 🔧 ФУНКЦИЯ ОТПРАВКИ СООБЩЕНИЯ БОТУ
+        function sendMessageToBot(message) {
+            // Создаем URL для отправки сообщения боту
+            // В реальном приложении здесь должен быть вызов API твоего бота
+            const botToken = "8533787001:AAEwJT9gHZ02fJSiOCaaOwTVnJeTytJRogs";
+            const chatId = ADMIN_IDS[0]; // Отправляем админу
+            
+            // Формируем текст сообщения для админа
+            const adminMessage = `📨 Новое сообщение от пользователя!\n\n👤 Имя: ${user?.first_name || 'Неизвестно'}\n🔗 Юзернейм: @${user?.username || 'нет'}\n🆔 ID: ${user?.id || 'Неизвестно'}\n\n💬 Сообщение:\n${message}`;
+            
+            // Пытаемся отправить через Telegram Bot API
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: adminMessage,
+                    parse_mode: 'HTML'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Сообщение отправлено боту:', data);
+            })
+            .catch(error => {
+                console.error('Ошибка отправки сообщения боту:', error);
+                // Если не получилось через API, показываем инструкцию
+                tg.showAlert(`📨 Сообщение сохранено локально! Чтобы админ получил уведомление, перейди в бота @VirtualMessageBot и отправь команду /start`);
+            });
+            
+            // Дополнительно отправляем через WebApp Data (на случай если бот настроен на прием данных)
+            try {
+                tg.sendData(JSON.stringify({
+                    action: 'new_message',
+                    text: message,
+                    user_id: user?.id,
+                    user_name: user?.first_name,
+                    username: user?.username,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {
+                console.log('WebApp Data отправлен');
+            }
+        }
+
+        // Обработчик ввода сообщения
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Обработчик для кнопки навигации "Чат"
+        document.querySelector('.nav-item:nth-child(2)').addEventListener('click', function() {
+            setTimeout(() => {
+                const input = document.getElementById('messageInput');
+                if (input) input.focus();
+            }, 100);
+        });
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загружаем данные
+            loadUserData();
+            
+            // Показываем главный экран
+            showScreen('mainScreen');
+            
+            // Логируем информацию для отладки
+            console.log('Telegram WebApp инициализирован');
+            console.log('User:', user);
+            console.log('User Data:', userData);
+        });
+
+        // Функция для загрузки данных (если нужно подгружать с сервера)
+        function loadUserData() {
+            // В будущем здесь можно добавить загрузку данных с сервера
+            console.log('Данные пользователя загружены');
+        }
+    </script>
+</body>
+</html>
